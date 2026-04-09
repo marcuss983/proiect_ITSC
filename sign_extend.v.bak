@@ -1,0 +1,8 @@
+module sign_extend (
+    input  [8:0]  immediate_in,
+    output reg [15:0] extended_out
+);
+    always @* begin
+        extended_out = { {7{immediate_in[8]}}, immediate_in };
+    end
+endmodule

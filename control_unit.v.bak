@@ -1,0 +1,124 @@
+module control_unit(
+    input wire clk,
+    input wire reset,
+    input wire [15:0] instruction,
+    input wire [3:0]  flag_in,
+    output reg [4:0]  alu_op_out,
+    output reg A_write_en, X_write_en, Y_write_en, SP_write_en,
+    output reg PC_load_en, PC_inc_en, Flag_write_en,
+    output reg mem_read_en, mem_write_en,
+    output reg ASIP_en,
+    output reg reg_mux_sel,
+    output reg alu_op1_sel,
+    output reg alu_op2_sel
+);
+    wire [5:0] opcode      = instruction[15:10];
+    wire       reg_addr_bit = instruction[9];
+    wire [8:0] imm         = instruction[8:0];
+
+    localparam ALU_ADD=5'd0, ALU_SUB=5'd1, ALU_MOV=5'd6, ALU_MUL=5'd7, ALU_DIV=5'd8;
+    localparam ALU_MOD=5'd9, ALU_AND=5'd10, ALU_OR=5'd11, ALU_XOR=5'd12, ALU_NOT=5'd13;
+    localparam ALU_CMP=5'd14, ALU_TST=5'd15, ALU_INC=5'd16, ALU_DEC=5'd17;
+
+    localparam O_LOAD=6'd25, O_STORE=6'd26;
+    localparam O_BRZ =6'd27, O_BRN =6'd28, O_BRC =6'd29, O_BRO =6'd30, O_BRA=6'd31;
+    localparam O_JMP =6'd32, O_RET =6'd33;
+    localparam O_ASIP_ENCRYPT=6'd20;
+
+    always @* begin
+        // Default (NOP)
+        alu_op_out   = 5'd0;
+        A_write_en   = 0;
+        X_write_en   = 0;
+        Y_write_en   = 0;
+        SP_write_en  = 0;
+        PC_load_en   = 0;
+        PC_inc_en    = 1;
+        Flag_write_en= 0;
+        mem_read_en  = 0;
+        mem_write_en = 0;
+        ASIP_en      = 0;
+        reg_mux_sel  = 0; // 0: ALU/ASIP, 1: Memorie
+        alu_op1_sel  = 0; // 0: A, 1: Y
+        alu_op2_sel  = 0; // 0: X, 1: immediate extins (setat la nevoie)
+
+        case (opcode)
+            // ALU opcodes (0..17 mapate direct in alu_op_out)
+            ALU_ADD, ALU_SUB, ALU_MOV, ALU_MUL, ALU_DIV,
+            ALU_MOD, ALU_AND, ALU_OR, ALU_XOR, ALU_NOT,
+            ALU_CMP, ALU_TST, ALU_INC, ALU_DEC: begin
+                alu_op_out   = opcode[4:0];
+                Flag_write_en= 1;
+
+                // operand 2 din imediat (simplificat)
+                alu_op2_sel  = 1;
+
+                // CMP si TST nu scriu in registre
+                if (opcode != ALU_CMP && opcode != ALU_TST) begin
+                    if (reg_addr_bit == 1'b0)
+                        X_write_en = 1'b1;
+                    else
+                        Y_write_en = 1'b1;
+                end
+            end
+
+            O_LOAD: begin
+                mem_read_en = 1;
+                reg_mux_sel = 1; // scriem din memorie
+                if (reg_addr_bit == 1'b0)
+                    X_write_en = 1;
+                else
+                    Y_write_en = 1;
+            end
+
+            O_STORE: begin
+                mem_write_en = 1;
+            end
+
+            O_ASIP_ENCRYPT: begin
+                ASIP_en       = 1;
+                A_write_en    = 1;
+                Flag_write_en = 1; // daca vrei sa actualizezi si flag-urile in functie de rezultat
+            end
+
+            O_BRZ: begin
+                PC_load_en = flag_in[0];
+                PC_inc_en  = ~flag_in[0];
+            end
+            O_BRN: begin
+                PC_load_en = flag_in[1];
+                PC_inc_en  = ~flag_in[1];
+            end
+            O_BRC: begin
+                PC_load_en = flag_in[2];
+                PC_inc_en  = ~flag_in[2];
+            end
+            O_BRO: begin
+                PC_load_en = flag_in[3];
+                PC_inc_en  = ~flag_in[3];
+            end
+            O_BRA: begin
+                PC_load_en = 1;
+                PC_inc_en  = 0;
+            end
+
+            O_JMP: begin
+                mem_write_en = 1;
+                SP_write_en  = 1;
+                PC_load_en   = 1;
+                PC_inc_en    = 0;
+            end
+
+            O_RET: begin
+                mem_read_en = 1;
+                SP_write_en = 1;
+                PC_load_en  = 1;
+                PC_inc_en   = 0;
+            end
+
+            default: begin
+                // NOP
+            end
+        endcase
+    end
+endmodule

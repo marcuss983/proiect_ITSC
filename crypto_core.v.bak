@@ -1,0 +1,74 @@
+module crypto_core (
+    input wire clk,             // Avem nevoie de ceas pentru registru intern
+    input wire reset,           // Reset pentru stare
+    input wire [15:0] data_in,  // Datele de criptat (Plaintext)
+    input wire [15:0] key_in,   // Cheia (Round Key)
+    input wire enable,          // Semnal de activare
+    output reg [15:0] result    // Rezultatul (Ciphertext)
+);
+
+    // --- 1. REGISTRU HARDWARE INTERN (Cerinta Profesor) ---
+    // Acest registru pastreaza starea criptarii intre apeluri (Hashing accumulation)
+    reg [15:0] internal_hash_state;
+
+    // --- 2. IMPLEMENTARE S-BOX (Substitution Layer) ---
+    // Aceasta este o componenta cheie in AES. Inlocuieste 4 biti cu alti 4 biti
+    // intr-un mod neliniar pentru a "ascunde" relatia matematica.
+    function [3:0] sbox_nibble;
+        input [3:0] in;
+        begin
+            case (in)
+                4'h0: sbox_nibble = 4'hC; // 0 -> C
+                4'h1: sbox_nibble = 4'h5; // 1 -> 5
+                4'h2: sbox_nibble = 4'h6;
+                4'h3: sbox_nibble = 4'hB;
+                4'h4: sbox_nibble = 4'h9;
+                4'h5: sbox_nibble = 4'h0;
+                4'h6: sbox_nibble = 4'hA;
+                4'h7: sbox_nibble = 4'hD;
+                4'h8: sbox_nibble = 4'h3;
+                4'h9: sbox_nibble = 4'hE;
+                4'hA: sbox_nibble = 4'hF;
+                4'hB: sbox_nibble = 4'h8;
+                4'hC: sbox_nibble = 4'h4;
+                4'hD: sbox_nibble = 4'h7;
+                4'hE: sbox_nibble = 4'h1;
+                4'hF: sbox_nibble = 4'h2;
+                default: sbox_nibble = 4'h0;
+            endcase
+        end
+    endfunction
+
+    // Fire pentru etapele intermediare
+    wire [15:0] mixed_data;
+    wire [15:0] substituted_data;
+    wire [15:0] permuted_data;
+
+    // ETAPA 1: Key Mixing (XOR cu cheia si cu starea anterioara - Hashing effect)
+    assign mixed_data = data_in ^ key_in ^ internal_hash_state;
+
+    // ETAPA 2: Substitution (Aplicam S-Box pe fiecare grup de 4 biti)
+    assign substituted_data[15:12] = sbox_nibble(mixed_data[15:12]);
+    assign substituted_data[11:8]  = sbox_nibble(mixed_data[11:8]);
+    assign substituted_data[7:4]   = sbox_nibble(mixed_data[7:4]);
+    assign substituted_data[3:0]   = sbox_nibble(mixed_data[3:0]);
+
+    // ETAPA 3: Permutation (Difuzie - Rotire si amestecare biti)
+    // Simulam "ShiftRows" si "MixColumns" din AES printr-o rotire complexa
+    // Rotire stanga cu 5 biti + inversare biti
+    assign permuted_data = {substituted_data[10:0], substituted_data[15:11]} ^ 16'hA5A5;
+
+    // --- LOGICA SECVENTIALA ---
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            internal_hash_state <= 16'h0000;
+            result <= 16'h0000;
+        end else if (enable) begin
+            // Actualizam registrul intern cu noua valoare calculata
+            internal_hash_state <= permuted_data;
+            result <= permuted_data;
+        end
+        // Daca enable e 0, pastram vechiul rezultat
+    end
+
+endmodule

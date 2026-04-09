@@ -1,0 +1,71 @@
+C:/Users/marcu/proiect_itsc/crypto_core.v {1 {vlog -work work -nocovercells C:/Users/marcu/proiect_itsc/crypto_core.v
+Model Technology ModelSim ALTERA vlog 6.5b Compiler 2009.10 Oct  1 2009
+-- Compiling module crypto_core
+
+Top level modules:
+	crypto_core
+
+} {} {}} C:/Users/marcu/proiect_itsc/memory.v {1 {vlog -work work -nocovercells C:/Users/marcu/proiect_itsc/memory.v
+Model Technology ModelSim ALTERA vlog 6.5b Compiler 2009.10 Oct  1 2009
+-- Compiling module memory
+
+Top level modules:
+	memory
+
+} {} {}} C:/Users/marcu/proiect_itsc/tb_registers.v {1 {vlog -work work -nocovercells C:/Users/marcu/proiect_itsc/tb_registers.v
+Model Technology ModelSim ALTERA vlog 6.5b Compiler 2009.10 Oct  1 2009
+-- Compiling module tb_registers
+
+Top level modules:
+	tb_registers
+
+} {} {}} C:/Users/marcu/proiect_itsc/alu.v {1 {vlog -work work -nocovercells C:/Users/marcu/proiect_itsc/alu.v
+Model Technology ModelSim ALTERA vlog 6.5b Compiler 2009.10 Oct  1 2009
+-- Compiling module alu
+
+Top level modules:
+	alu
+
+} {} {}} C:/Users/marcu/proiect_itsc/top_processor.v {1 {vlog -work work -nocovercells C:/Users/marcu/proiect_itsc/top_processor.v
+Model Technology ModelSim ALTERA vlog 6.5b Compiler 2009.10 Oct  1 2009
+-- Compiling module top_processor
+
+Top level modules:
+	top_processor
+
+} {} {}} C:/Users/marcu/proiect_itsc/tb_alu.v {1 {vlog -work work -nocovercells C:/Users/marcu/proiect_itsc/tb_alu.v
+Model Technology ModelSim ALTERA vlog 6.5b Compiler 2009.10 Oct  1 2009
+-- Compiling module tb_alu
+
+Top level modules:
+	tb_alu
+
+} {} {}} C:/Users/marcu/proiect_itsc/test_program.v {1 {vlog -work work -nocovercells C:/Users/marcu/proiect_itsc/test_program.v
+Model Technology ModelSim ALTERA vlog 6.5b Compiler 2009.10 Oct  1 2009
+-- Compiling module test_program
+
+Top level modules:
+	test_program
+
+} {} {}} C:/Users/marcu/proiect_itsc/control_unit.v {1 {vlog -work work -nocovercells C:/Users/marcu/proiect_itsc/control_unit.v
+Model Technology ModelSim ALTERA vlog 6.5b Compiler 2009.10 Oct  1 2009
+-- Compiling module control_unit
+
+Top level modules:
+	control_unit
+
+} {} {}} C:/Users/marcu/proiect_itsc/registers.v {1 {vlog -work work -nocovercells C:/Users/marcu/proiect_itsc/registers.v
+Model Technology ModelSim ALTERA vlog 6.5b Compiler 2009.10 Oct  1 2009
+-- Compiling module registers
+
+Top level modules:
+	registers
+
+} {} {}} C:/Users/marcu/proiect_itsc/sign_extend.v {1 {vlog -work work -nocovercells C:/Users/marcu/proiect_itsc/sign_extend.v
+Model Technology ModelSim ALTERA vlog 6.5b Compiler 2009.10 Oct  1 2009
+-- Compiling module sign_extend
+
+Top level modules:
+	sign_extend
+
+} {} {}}

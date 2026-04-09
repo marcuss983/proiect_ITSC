@@ -1,0 +1,64 @@
+module tb_alu;
+    localparam ALU_ADD = 5'd0;
+    localparam ALU_SUB = 5'd1;
+    localparam ALU_TST = 5'd15;
+
+    reg  [15:0] test_op1;
+    reg  [15:0] test_op2;
+    reg  [ 4:0] test_alu_op;
+    wire [15:0] test_result;
+    wire [ 3:0] test_flag_out;
+
+    alu uut (
+        .op1(test_op1),
+        .op2(test_op2),
+        .alu_op(test_alu_op),
+        .result(test_result),
+        .flag_out(test_flag_out)
+    );
+
+    initial begin
+        $display("------------------------------------------------------------------");
+        $display("--- Incepere Testare ALU ---");
+        $display("--- Format Flag: {V, C, N, Z} ---");
+        $display("------------------------------------------------------------------");
+
+        test_op1 = 16'h0000;
+        test_op2 = 16'h0000;
+        test_alu_op = ALU_ADD;
+        #5;
+
+        test_op1 = 16'd5;
+        test_op2 = 16'd10;
+        test_alu_op = ALU_ADD;
+        #10;
+        $display("Test 1: ADD (5+10): R=%d, Flags=%b (Asteptat: 15, 0000)", test_result, test_flag_out);
+
+        test_op1 = 16'd10;
+        test_op2 = 16'd20;
+        test_alu_op = ALU_SUB;
+        #10;
+        $display("Test 2: SUB (10-20): R=%h, Flags=%b (Asteptat: FFF6, 0010)", test_result, test_flag_out);
+
+        test_op1 = 16'hFFFF;
+        test_op2 = 16'd1;
+        test_alu_op = ALU_ADD;
+        #10;
+        $display("Test 3: ADD Carry: R=%h, Flags=%b (Asteptat: 0000, 0101)", test_result, test_flag_out);
+
+        test_op1 = 16'h7FFF;
+        test_op2 = 16'd1;
+        test_alu_op = ALU_ADD;
+        #10;
+        $display("Test 4: ADD Overflow: R=%h, Flags=%b (Asteptat: 8000, 1010)", test_result, test_flag_out);
+
+        test_op1 = 16'hFFFF;
+        test_op2 = 16'h000F;
+        test_alu_op = ALU_TST;
+        #10;
+        $display("Test 5: TST: R=%h, Flags=%b (Asteptat: R=FFF0, Z depinde de rezultat)", test_result, test_flag_out);
+
+        #10;
+        $stop;
+    end
+endmodule

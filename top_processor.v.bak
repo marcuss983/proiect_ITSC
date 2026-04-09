@@ -1,0 +1,65 @@
+module top_processor(input clk, input reset);
+    // Fire interne
+        wire [15:0] instr, mem_out, alu_res, asip_res, A, X, Y, PC, SP, ext_imm;
+        wire [3:0] flags_from_alu;
+        wire[3:0] flags_stored;
+    
+    // Semnale control
+    wire [4:0] alu_op;
+    wire A_en, X_en, Y_en, SP_push, SP_pop, F_en, PC_ld, PC_inc, m_rd, m_wr, asip_en;
+    wire reg_dst_sel, alu_src_sel, addr_sel, pc_src_sel;
+
+    // 1. Memory
+    memory main_mem (
+        .clk(clk), .addr( (m_wr || m_rd) ? ((addr_sel)?SP:ext_imm) : PC ), 
+        .data_in( (addr_sel)?PC:X ), // La JMP salvam PC, la STORE salvam X
+        .mem_write(m_wr), .data_out(mem_out)
+    );
+    assign instr = mem_out; 
+
+    // 2. Control Unit
+    control_unit ctrl (
+        .instruction(instr), .flag_in(flags_stored),
+        .alu_op(alu_op), .A_en(A_en), .X_en(X_en), .Y_en(Y_en), 
+        .SP_push(SP_push), .SP_pop(SP_pop), // FIX: Legaturi noi
+        .Flag_en(F_en), .PC_load(PC_ld), .PC_inc(PC_inc), 
+        .mem_read(m_rd), .mem_write(m_wr), .ASIP_en(asip_en),
+        .reg_dst_sel(reg_dst_sel), .alu_src_sel(alu_src_sel), .addr_sel(addr_sel),
+        .pc_src_sel(pc_src_sel) // FIX: Selector sursa PC
+    );
+
+    // 3. Sign Extend - ATENTIE: Enuntul zice 9 biti Imm pt ALU, dar 10 biti pt Branch.
+    // Compromis: Folosim 10 biti la input ca sa acoperim Branch.
+    sign_extend se (.immediate_in(instr[9:0]), .extended_out(ext_imm));
+
+    // 4. ALU
+    wire [15:0] op1_alu = (instr[9]) ? Y : X;
+    
+    wire [15:0] op2_alu = (alu_src_sel) ? ext_imm : X; 
+    alu execution (
+        .op1(op1_alu), .op2(op2_alu), .alu_op(alu_op), .result(alu_res), .flag_out(flags_from_alu)
+    );
+
+    // 5. ASIP
+    crypto_core my_asip (
+        .clk(clk), .reset(reset), .data_in(A), .key_in(X), 
+        .enable(asip_en), .result(asip_res)
+    );
+
+    // 6. Registers
+    wire [15:0] w_data = (asip_en) ? asip_res : ((reg_dst_sel) ? mem_out : alu_res);
+    
+    // FIX: Logica pentru PC Next - Daca e RET luam din Memorie, altfel din Immediate
+    wire [15:0] next_pc_val = (pc_src_sel) ? mem_out : ext_imm;
+
+    registers reg_file (
+        .clk(clk), .reset(reset), .data_in(w_data), 
+        .pc_next_addr(next_pc_val), // FIX: Sursa corecta
+        .flag_in(flags_from_alu),
+        .A_en(A_en), .X_en(X_en), .Y_en(Y_en), 
+        .SP_push(SP_push), .SP_pop(SP_pop), // FIX
+        .Flag_en(F_en),
+        .PC_load(PC_ld), .PC_inc(PC_inc),
+        .A_out(A), .X_out(X), .Y_out(Y), .PC_out(PC), .SP_out(SP), .Flag_out(flags_stored)
+    );
+endmodule
